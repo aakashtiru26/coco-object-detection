@@ -6,7 +6,7 @@
     <title>VisionTrack | Real-Time Object Detection</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -34,17 +34,14 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            font-family: var(--font-sans);
             line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .serif {
-            font-family: 'Cinzel', serif;
-            letter-spacing: 1px;
-        }h1, h2, h3, h4, .serif {
+        /* Typography */
+        h1, h2, h3, h4, .serif {
             font-family: var(--font-serif);
             font-weight: 400;
         }
@@ -689,10 +686,10 @@
 
     <section id="hero">
         <div class="hero-content">
-            <h1 class="serif" id="hero-title" style="margin-bottom: 1.5rem; font-size: clamp(4rem, 9vw, 8rem); line-height: 1.1; min-height: 3.3em; letter-spacing: 4px; text-transform: uppercase;">
+            <h1 class="serif" id="hero-title" style="margin-bottom: 1.5rem; font-size: clamp(3rem, 6vw, 5rem); line-height: 1.1; min-height: 3.3em;">
                 <!-- Typed via JS -->
             </h1>
-            <p class="hero-sub" style="font-size: 1.4rem; font-weight: 300; letter-spacing: 1px;">
+            <p class="hero-sub">
                 A high-performance computer vision system built for surveillance, automation, and intelligence.
             </p>
             <div class="hero-cta">
