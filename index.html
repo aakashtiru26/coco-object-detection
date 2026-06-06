@@ -6,7 +6,8 @@
     <title>VisionTrack | Real-Time Object Detection</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --bg-color: #0e0e0e;
@@ -564,20 +565,16 @@
             transition: color 0.3s;
         }
 
-        /* Fire Background */
-        #fire-canvas {
+        /* WebGL Background */
+        #webgl-canvas {
             position: fixed;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100vw;
-            height: 60vh;
+            height: 100vh;
             z-index: -2;
-            image-rendering: pixelated;
-            opacity: 0.05; /* Made much more subtle */
             pointer-events: none;
-            mix-blend-mode: screen;
-            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-            mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+            opacity: 0.65;
         }
 
         /* Footer */
@@ -670,7 +667,7 @@
 </head>
 <body>
 
-    <canvas id="fire-canvas"></canvas>
+    <canvas id="webgl-canvas"></canvas>
 
     <nav>
         <a href="#" class="logo">VisionTrack</a>
@@ -967,64 +964,150 @@
             }
         });
 
-        // Fire Background Logic
-        const fireCanvas = document.getElementById('fire-canvas');
-        const fireCtx = fireCanvas.getContext('2d');
-        const FIRE_WIDTH = 120;
-        const FIRE_HEIGHT = 80;
-        fireCanvas.width = FIRE_WIDTH;
-        fireCanvas.height = FIRE_HEIGHT;
+        // WebGL Three.js Background Logic
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0e0e0e, 0.003);
 
-        const firePixels = new Array(FIRE_WIDTH * FIRE_HEIGHT).fill(0);
-        
-        // Golden palette
-        const fireColors = [
-            [0,0,0], [15,7,0], [31,15,0], [47,22,0], [63,30,0], [79,37,0], 
-            [95,45,0], [111,52,0], [127,60,0], [143,67,0], [159,75,0], [175,82,0], 
-            [191,90,0], [201,105,10], [211,120,20], [221,135,30], [231,150,40], 
-            [241,165,50], [251,180,60], [255,195,70], [255,205,80], [255,215,90],
-            [255,225,100], [255,235,110], [255,240,120], [255,245,130], [255,250,140],
-            [255,255,150], [255,255,160], [255,255,170], [255,255,180], [255,255,190],
-            [255,255,200], [255,255,210], [255,255,220], [255,255,230], [255,255,255]
-        ];
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 100;
 
-        for (let i = 0; i < FIRE_WIDTH; i++) {
-            firePixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + i] = 36;
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // 1. Scroll-Responsive Abstract Geometry
+        const coreGroup = new THREE.Group();
+        scene.add(coreGroup);
+
+        // Icosahedron core
+        const coreGeo = new THREE.IcosahedronGeometry(25, 1);
+        const coreMat = new THREE.MeshBasicMaterial({ 
+            color: 0xc9a96e, 
+            wireframe: true, 
+            transparent: true, 
+            opacity: 0.1 
+        });
+        const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+        coreGroup.add(coreMesh);
+
+        // Outer shards
+        for(let i=0; i<40; i++) {
+            const shardGeo = new THREE.TetrahedronGeometry(Math.random() * 6 + 2);
+            const shardMat = new THREE.MeshBasicMaterial({
+                color: 0xc9a96e,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.1 + Math.random() * 0.2
+            });
+            const shard = new THREE.Mesh(shardGeo, shardMat);
+            shard.position.set(
+                (Math.random() - 0.5) * 120,
+                (Math.random() - 0.5) * 120,
+                (Math.random() - 0.5) * 120
+            );
+            shard.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+            coreGroup.add(shard);
         }
 
-        const fireImgData = fireCtx.createImageData(FIRE_WIDTH, FIRE_HEIGHT);
+        // 2. Realistic Fire Embers (Particles)
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+        const velocities = [];
 
-        function animateFire() {
-            for (let x = 0; x < FIRE_WIDTH; x++) {
-                for (let y = 1; y < FIRE_HEIGHT; y++) {
-                    const src = y * FIRE_WIDTH + x;
-                    const pixel = firePixels[src];
-                    if (pixel === 0) {
-                        firePixels[src - FIRE_WIDTH] = 0;
-                    } else {
-                        const randIdx = Math.floor(Math.random() * 3);
-                        const dst = src - FIRE_WIDTH - randIdx + 1;
-                        if (dst >= 0) {
-                            firePixels[dst] = pixel - (randIdx & 1);
-                        }
-                    }
+        for(let i = 0; i < particlesCount * 3; i+=3) {
+            posArray[i] = (Math.random() - 0.5) * 200; // x
+            posArray[i+1] = (Math.random() - 0.5) * 200 - 50; // y
+            posArray[i+2] = (Math.random() - 0.5) * 200; // z
+            
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.05,
+                y: Math.random() * 0.2 + 0.05, // Moving up slowly
+                z: (Math.random() - 0.5) * 0.05
+            });
+        }
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Create glowing radial gradient texture for embers
+        const particleCanvas = document.createElement('canvas');
+        particleCanvas.width = 32;
+        particleCanvas.height = 32;
+        const pCtx = particleCanvas.getContext('2d');
+        const gradient = pCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gradient.addColorStop(0, 'rgba(255, 220, 150, 1)');
+        gradient.addColorStop(0.2, 'rgba(201, 169, 110, 0.8)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        pCtx.fillStyle = gradient;
+        pCtx.fillRect(0, 0, 32, 32);
+
+        const particleTexture = new THREE.CanvasTexture(particleCanvas);
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 2.0,
+            map: particleTexture,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            opacity: 0.6
+        });
+
+        const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particleMesh);
+
+        // Scroll responsive logic
+        let scrollY = window.scrollY;
+        let targetScrollY = window.scrollY;
+        
+        window.addEventListener('scroll', () => {
+            targetScrollY = window.scrollY;
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            const elapsedTime = clock.getElapsedTime();
+
+            // Smooth scroll interpolation
+            scrollY += (targetScrollY - scrollY) * 0.05;
+
+            // Rotate core geometry based on time and scroll
+            coreGroup.rotation.y = elapsedTime * 0.05 + scrollY * 0.001;
+            coreGroup.rotation.x = elapsedTime * 0.02 + scrollY * 0.0005;
+            
+            // Move camera based on scroll to create parallax
+            camera.position.y = -scrollY * 0.05;
+            camera.position.z = 100 - (scrollY * 0.015); // Move deeper as you scroll
+
+            // Animate fire embers
+            const positions = particleMesh.geometry.attributes.position.array;
+            for(let i=0; i<particlesCount; i++) {
+                const i3 = i * 3;
+                
+                // Add slight turbulence
+                positions[i3] += Math.sin(elapsedTime * 1.5 + positions[i3+1] * 0.05) * 0.03; // X wobble
+                positions[i3+1] += velocities[i].y; // Y upward
+                
+                // Reset if they go too high
+                if(positions[i3+1] > 100 - camera.position.y) {
+                    positions[i3+1] = -100 - camera.position.y;
+                    positions[i3] = (Math.random() - 0.5) * 200;
                 }
             }
+            particleMesh.geometry.attributes.position.needsUpdate = true;
 
-            for (let i = 0; i < firePixels.length; i++) {
-                const color = fireColors[firePixels[i]] || [0,0,0];
-                fireImgData.data[i * 4] = color[0];
-                fireImgData.data[i * 4 + 1] = color[1];
-                fireImgData.data[i * 4 + 2] = color[2];
-                fireImgData.data[i * 4 + 3] = firePixels[i] > 0 ? 255 : 0;
-            }
-            fireCtx.putImageData(fireImgData, 0, 0);
-
-            setTimeout(() => {
-                requestAnimationFrame(animateFire);
-            }, 1000/30);
+            renderer.render(scene, camera);
         }
-        animateFire();
+        animate3D();
 
         // Live Real-Time Detection Logic
         const webcamPreview = document.getElementById('webcam-preview');
