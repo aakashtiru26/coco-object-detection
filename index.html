@@ -553,6 +553,73 @@
             text-transform: capitalize;
         }
 
+        .demo-overlay {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            color: #555;
+            font-family: monospace;
+            font-size: 1.2rem;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        /* Fire Background */
+        #fire-canvas {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            image-rendering: pixelated;
+            opacity: 0.15;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        /* 3D Pixelated Detailing */
+        .cube-container {
+            position: absolute;
+            perspective: 800px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .cube {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotateCube 15s infinite linear;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(201, 169, 110, 0.05);
+            border: 2px dashed rgba(201, 169, 110, 0.4);
+            image-rendering: pixelated;
+            box-shadow: inset 0 0 15px rgba(201, 169, 110, 0.2);
+        }
+
+        .cube-face.front  { transform: translateZ(30px); }
+        .cube-face.back   { transform: rotateY(180deg) translateZ(30px); }
+        .cube-face.right  { transform: rotateY(90deg) translateZ(30px); }
+        .cube-face.left   { transform: rotateY(-90deg) translateZ(30px); }
+        .cube-face.top    { transform: rotateX(90deg) translateZ(30px); }
+        .cube-face.bottom { transform: rotateX(-90deg) translateZ(30px); }
+
+        @keyframes rotateCube {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
+        }
+
+        .pos-1 { top: 20%; right: 10%; transform: scale(1.5); }
+        .pos-2 { top: 60%; left: 8%; transform: scale(0.8); }
+        .pos-3 { top: 85%; right: 15%; transform: scale(1.2); }
+
         /* Footer */
         footer {
             padding: 6rem 5% 3rem 5%;
@@ -642,6 +709,31 @@
     </style>
 </head>
 <body>
+
+    <canvas id="fire-canvas"></canvas>
+
+    <!-- 3D Detailing -->
+    <div class="cube-container pos-1">
+        <div class="cube">
+            <div class="cube-face front"></div><div class="cube-face back"></div>
+            <div class="cube-face right"></div><div class="cube-face left"></div>
+            <div class="cube-face top"></div><div class="cube-face bottom"></div>
+        </div>
+    </div>
+    <div class="cube-container pos-2">
+        <div class="cube">
+            <div class="cube-face front"></div><div class="cube-face back"></div>
+            <div class="cube-face right"></div><div class="cube-face left"></div>
+            <div class="cube-face top"></div><div class="cube-face bottom"></div>
+        </div>
+    </div>
+    <div class="cube-container pos-3">
+        <div class="cube">
+            <div class="cube-face front"></div><div class="cube-face back"></div>
+            <div class="cube-face right"></div><div class="cube-face left"></div>
+            <div class="cube-face top"></div><div class="cube-face bottom"></div>
+        </div>
+    </div>
 
     <nav>
         <a href="#" class="logo">VisionTrack</a>
@@ -937,6 +1029,65 @@
                 document.body.style.overflow = 'auto';
             }
         });
+
+        // Fire Background Logic
+        const fireCanvas = document.getElementById('fire-canvas');
+        const fireCtx = fireCanvas.getContext('2d');
+        const FIRE_WIDTH = 120;
+        const FIRE_HEIGHT = 80;
+        fireCanvas.width = FIRE_WIDTH;
+        fireCanvas.height = FIRE_HEIGHT;
+
+        const firePixels = new Array(FIRE_WIDTH * FIRE_HEIGHT).fill(0);
+        
+        // Golden palette
+        const fireColors = [
+            [0,0,0], [15,7,0], [31,15,0], [47,22,0], [63,30,0], [79,37,0], 
+            [95,45,0], [111,52,0], [127,60,0], [143,67,0], [159,75,0], [175,82,0], 
+            [191,90,0], [201,105,10], [211,120,20], [221,135,30], [231,150,40], 
+            [241,165,50], [251,180,60], [255,195,70], [255,205,80], [255,215,90],
+            [255,225,100], [255,235,110], [255,240,120], [255,245,130], [255,250,140],
+            [255,255,150], [255,255,160], [255,255,170], [255,255,180], [255,255,190],
+            [255,255,200], [255,255,210], [255,255,220], [255,255,230], [255,255,255]
+        ];
+
+        for (let i = 0; i < FIRE_WIDTH; i++) {
+            firePixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + i] = 36;
+        }
+
+        const fireImgData = fireCtx.createImageData(FIRE_WIDTH, FIRE_HEIGHT);
+
+        function animateFire() {
+            for (let x = 0; x < FIRE_WIDTH; x++) {
+                for (let y = 1; y < FIRE_HEIGHT; y++) {
+                    const src = y * FIRE_WIDTH + x;
+                    const pixel = firePixels[src];
+                    if (pixel === 0) {
+                        firePixels[src - FIRE_WIDTH] = 0;
+                    } else {
+                        const randIdx = Math.floor(Math.random() * 3);
+                        const dst = src - FIRE_WIDTH - randIdx + 1;
+                        if (dst >= 0) {
+                            firePixels[dst] = pixel - (randIdx & 1);
+                        }
+                    }
+                }
+            }
+
+            for (let i = 0; i < firePixels.length; i++) {
+                const color = fireColors[firePixels[i]] || [0,0,0];
+                fireImgData.data[i * 4] = color[0];
+                fireImgData.data[i * 4 + 1] = color[1];
+                fireImgData.data[i * 4 + 2] = color[2];
+                fireImgData.data[i * 4 + 3] = firePixels[i] > 0 ? 255 : 0;
+            }
+            fireCtx.putImageData(fireImgData, 0, 0);
+
+            setTimeout(() => {
+                requestAnimationFrame(animateFire);
+            }, 1000/30);
+        }
+        animateFire();
 
         // Live Real-Time Detection Logic
         const webcamPreview = document.getElementById('webcam-preview');
