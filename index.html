@@ -570,55 +570,15 @@
             bottom: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: 60vh;
             z-index: -2;
             image-rendering: pixelated;
-            opacity: 0.15;
+            opacity: 0.05; /* Made much more subtle */
             pointer-events: none;
             mix-blend-mode: screen;
+            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+            mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
         }
-
-        /* 3D Pixelated Detailing */
-        .cube-container {
-            position: absolute;
-            perspective: 800px;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .cube {
-            width: 60px;
-            height: 60px;
-            position: relative;
-            transform-style: preserve-3d;
-            animation: rotateCube 15s infinite linear;
-        }
-
-        .cube-face {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background: rgba(201, 169, 110, 0.05);
-            border: 2px dashed rgba(201, 169, 110, 0.4);
-            image-rendering: pixelated;
-            box-shadow: inset 0 0 15px rgba(201, 169, 110, 0.2);
-        }
-
-        .cube-face.front  { transform: translateZ(30px); }
-        .cube-face.back   { transform: rotateY(180deg) translateZ(30px); }
-        .cube-face.right  { transform: rotateY(90deg) translateZ(30px); }
-        .cube-face.left   { transform: rotateY(-90deg) translateZ(30px); }
-        .cube-face.top    { transform: rotateX(90deg) translateZ(30px); }
-        .cube-face.bottom { transform: rotateX(-90deg) translateZ(30px); }
-
-        @keyframes rotateCube {
-            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
-        }
-
-        .pos-1 { top: 20%; right: 10%; transform: scale(1.5); }
-        .pos-2 { top: 60%; left: 8%; transform: scale(0.8); }
-        .pos-3 { top: 85%; right: 15%; transform: scale(1.2); }
 
         /* Footer */
         footer {
@@ -711,29 +671,6 @@
 <body>
 
     <canvas id="fire-canvas"></canvas>
-
-    <!-- 3D Detailing -->
-    <div class="cube-container pos-1">
-        <div class="cube">
-            <div class="cube-face front"></div><div class="cube-face back"></div>
-            <div class="cube-face right"></div><div class="cube-face left"></div>
-            <div class="cube-face top"></div><div class="cube-face bottom"></div>
-        </div>
-    </div>
-    <div class="cube-container pos-2">
-        <div class="cube">
-            <div class="cube-face front"></div><div class="cube-face back"></div>
-            <div class="cube-face right"></div><div class="cube-face left"></div>
-            <div class="cube-face top"></div><div class="cube-face bottom"></div>
-        </div>
-    </div>
-    <div class="cube-container pos-3">
-        <div class="cube">
-            <div class="cube-face front"></div><div class="cube-face back"></div>
-            <div class="cube-face right"></div><div class="cube-face left"></div>
-            <div class="cube-face top"></div><div class="cube-face bottom"></div>
-        </div>
-    </div>
 
     <nav>
         <a href="#" class="logo">VisionTrack</a>
