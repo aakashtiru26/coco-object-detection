@@ -440,6 +440,119 @@
             transition: color 0.3s;
         }
 
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid var(--border-color);
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.4s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(10,10,10,0.5);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: var(--accent-color);
+            color: #0a0a0a;
+        }
+
+        .modal-header-img {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-body {
+            padding: 4rem 5%;
+        }
+
+        .modal-body h2 {
+            font-size: clamp(2rem, 3vw, 3rem);
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .modal-body > p {
+            color: rgba(245, 240, 232, 0.7);
+            font-size: 1.1rem;
+            margin-bottom: 4rem;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+        }
+
+        .category-group h4 {
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(201, 169, 110, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        .category-group ul {
+            list-style: none;
+        }
+
+        .category-group li {
+            font-size: 0.95rem;
+            color: rgba(245, 240, 232, 0.8);
+            margin-bottom: 0.7rem;
+            letter-spacing: 0.05em;
+            text-transform: capitalize;
+        }
+
         /* Footer */
         footer {
             padding: 6rem 5% 3rem 5%;
@@ -643,9 +756,9 @@
                 <h3>Real-Time Inference</h3>
                 <p>Achieves 25+ frames per second on standard CPU/GPU hardware, ensuring immediate response for critical applications.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" id="coco-card" style="cursor: pointer;">
                 <h3>Multi-Object Detection</h3>
-                <p>Simultaneously detects and tracks over 80 distinct object categories trained on the comprehensive COCO dataset.</p>
+                <p>Simultaneously detects and tracks over 80 distinct object categories trained on the comprehensive COCO dataset. <span style="color: var(--accent-color); font-size: 0.85rem; display: block; margin-top: 1rem; text-transform: uppercase; letter-spacing: 0.1em; transition: opacity 0.3s;">View Categories →</span></p>
             </div>
             <div class="feature-card">
                 <h3>Confidence Scoring</h3>
@@ -670,6 +783,79 @@
             <button id="live-btn" class="btn btn-solid fade-in">Start Live Detection</button>
         </div>
     </section>
+
+    <div class="modal-overlay" id="categories-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            <img src="coco_header.png" class="modal-header-img" alt="Neural Network Classes">
+            <div class="modal-body">
+                <h2 class="serif">The 80 COCO Categories</h2>
+                <p>VisionTrack leverages the comprehensive COCO (Common Objects in Context) dataset. Our neural engine can simultaneously detect, track, and classify any of the following 80 distinct object classes in real time.</p>
+                <div class="categories-grid">
+                    <div class="category-group">
+                        <h4>People & Animals</h4>
+                        <ul>
+                            <li>person</li><li>bird</li><li>cat</li><li>dog</li><li>horse</li><li>sheep</li><li>cow</li><li>elephant</li><li>bear</li><li>zebra</li><li>giraffe</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Vehicles</h4>
+                        <ul>
+                            <li>bicycle</li><li>car</li><li>motorcycle</li><li>airplane</li><li>bus</li><li>train</li><li>truck</li><li>boat</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Outdoor & Street</h4>
+                        <ul>
+                            <li>traffic light</li><li>fire hydrant</li><li>stop sign</li><li>parking meter</li><li>bench</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Sports & Recreation</h4>
+                        <ul>
+                            <li>frisbee</li><li>skis</li><li>snowboard</li><li>sports ball</li><li>kite</li><li>baseball bat</li><li>baseball glove</li><li>skateboard</li><li>surfboard</li><li>tennis racket</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Accessories & Apparel</h4>
+                        <ul>
+                            <li>backpack</li><li>umbrella</li><li>handbag</li><li>tie</li><li>suitcase</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Kitchen & Dining</h4>
+                        <ul>
+                            <li>bottle</li><li>wine glass</li><li>cup</li><li>fork</li><li>knife</li><li>spoon</li><li>bowl</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Food</h4>
+                        <ul>
+                            <li>banana</li><li>apple</li><li>sandwich</li><li>orange</li><li>broccoli</li><li>carrot</li><li>hot dog</li><li>pizza</li><li>donut</li><li>cake</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Furniture</h4>
+                        <ul>
+                            <li>chair</li><li>couch</li><li>potted plant</li><li>bed</li><li>dining table</li><li>toilet</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Electronics</h4>
+                        <ul>
+                            <li>tv</li><li>laptop</li><li>mouse</li><li>remote</li><li>keyboard</li><li>cell phone</li><li>microwave</li><li>oven</li><li>toaster</li><li>refrigerator</li>
+                        </ul>
+                    </div>
+                    <div class="category-group">
+                        <h4>Indoor & Misc</h4>
+                        <ul>
+                            <li>sink</li><li>book</li><li>clock</li><li>vase</li><li>scissors</li><li>teddy bear</li><li>hair drier</li><li>toothbrush</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <div class="footer-top fade-in">
@@ -714,6 +900,28 @@
 
         document.querySelectorAll('.fade-in').forEach(element => {
             observer.observe(element);
+        });
+
+        // Modal Logic
+        const cocoCard = document.getElementById('coco-card');
+        const categoriesModal = document.getElementById('categories-modal');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        cocoCard.addEventListener('click', () => {
+            categoriesModal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        });
+
+        modalCloseBtn.addEventListener('click', () => {
+            categoriesModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+
+        categoriesModal.addEventListener('click', (e) => {
+            if (e.target === categoriesModal) {
+                categoriesModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
         });
 
         // Live Real-Time Detection Logic
