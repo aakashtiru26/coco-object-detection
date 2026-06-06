@@ -1132,6 +1132,20 @@
         }
         animate3D();
 
+        // Environment Detection for Backend URL
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        // IMPORTANT: Once you create your Hugging Face Space, replace this with your Space's URL!
+        // Example: 'aakashtiru26-visiontrack.hf.space'
+        const PRODUCTION_BACKEND = 'YOUR_HUGGINGFACE_SPACE_NAME.hf.space'; 
+        
+        const wsProtocol = isLocal ? 'ws://' : 'wss://';
+        const httpProtocol = isLocal ? 'http://' : 'https://';
+        const backendHost = isLocal ? 'localhost:8000' : PRODUCTION_BACKEND;
+
+        const wsUrl = `${wsProtocol}${backendHost}/api/stream`;
+        const apiUrl = `${httpProtocol}${backendHost}/api/detect`;
+
         // Live Real-Time Detection Logic
         const webcamPreview = document.getElementById('webcam-preview');
         const overlayCanvas = document.getElementById('overlay-canvas');
@@ -1178,8 +1192,8 @@
                 return;
             }
             
-            // Connect to FastAPI WebSocket
-            ws = new WebSocket('ws://localhost:8000/api/stream');
+            // Connect to dynamic WebSocket URL
+            ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
                 isLive = true;
