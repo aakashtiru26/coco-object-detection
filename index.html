@@ -59,18 +59,6 @@
         .pos-2 { top: 60%; left: 8%; transform: scale(0.8); }
         .pos-3 { top: 85%; right: 15%; transform: scale(1.2); }
 
-        /* Typewriter Cursor */
-        #type-cursor {
-            color: var(--accent-color);
-            animation: blink 1s infinite;
-            font-weight: 300;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
         /* Animations */
         .fade-in {
             opacity: 0;
@@ -717,7 +705,9 @@
     <section id="hero">
         <div class="hero-content">
             <h1 class="hero-title serif" id="hero-title">
-                <!-- Typed via JS -->
+                Real-Time<br>
+                Object<br>
+                Detection
             </h1>
             <p class="hero-sub">
                 A high-performance computer vision system built for surveillance, automation, and intelligence.
@@ -996,38 +986,6 @@
                 document.body.style.overflow = 'auto';
             }
         });
-
-        // Typewriter Effect for Hero Text
-        const heroTitle = document.getElementById('hero-title');
-        const textLines = ['Real-Time', 'Object', 'Detection'];
-        let lineIndex = 0;
-        let charIndex = 0;
-        
-        function typeWriter() {
-            if (lineIndex < textLines.length) {
-                if (charIndex < textLines[lineIndex].length) {
-                    const currentText = textLines[lineIndex].substring(0, charIndex + 1);
-                    let html = '';
-                    for (let i = 0; i < lineIndex; i++) {
-                        html += textLines[i] + '<br>';
-                    }
-                    html += currentText + '<span id="type-cursor">|</span>';
-                    heroTitle.innerHTML = html;
-                    charIndex++;
-                    setTimeout(typeWriter, 80); // Speed of typing
-                } else {
-                    lineIndex++;
-                    charIndex = 0;
-                    if (lineIndex < textLines.length) {
-                        heroTitle.innerHTML = heroTitle.innerHTML.replace('<span id="type-cursor">|</span>', '<br><span id="type-cursor">|</span>');
-                    }
-                    setTimeout(typeWriter, 250); // Pause between lines
-                }
-            }
-        }
-        
-        // Start typing after a tiny delay
-        setTimeout(typeWriter, 300);
 
         // WebGL Three.js Background Logic
         const canvas = document.getElementById('webgl-canvas');
