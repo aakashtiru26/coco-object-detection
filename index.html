@@ -1135,9 +1135,8 @@
         // Environment Detection for Backend URL
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         
-        // IMPORTANT: Once you create your Hugging Face Space, replace this with your Space's URL!
-        // Example: 'aakashtiru26-visiontrack.hf.space'
-        const PRODUCTION_BACKEND = 'YOUR_HUGGINGFACE_SPACE_NAME.hf.space'; 
+        // Production Hugging Face Backend URL
+        const PRODUCTION_BACKEND = 'aakashtiru26-visiontrack-backend.hf.space'; 
         
         const wsProtocol = isLocal ? 'ws://' : 'wss://';
         const httpProtocol = isLocal ? 'http://' : 'https://';
