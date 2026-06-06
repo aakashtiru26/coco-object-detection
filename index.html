@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionTrack | Real-Time Object Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0e0e0e;
+            --text-color: #f5f0e8;
+            --accent-color: #c9a96e;
+            --border-color: rgba(245, 240, 232, 0.15);
+            
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Inter', sans-serif;
+            
+            --section-padding: 8rem 5%;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, .serif {
+            font-family: var(--font-serif);
+            font-weight: 400;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            transition: background-color 0.3s ease, padding 0.3s ease;
+        }
+
+        nav.scrolled {
+            background-color: rgba(14, 14, 14, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-color);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .btn-solid {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .btn-solid:hover {
+            background: transparent;
+            color: var(--accent-color);
+        }
+
+        /* Hero */
+        #hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 5%;
+            position: relative;
+        }
+
+        #hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 70% 50%, rgba(201, 169, 110, 0.05) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .hero-title {
+            font-size: clamp(4rem, 8vw, 8rem);
+            line-height: 1.1;
+            margin-bottom: 2rem;
+        }
+
+        .hero-title span {
+            display: block;
+        }
+
+        .hero-sub {
+            max-width: 600px;
+            font-size: 1.1rem;
+            color: rgba(245, 240, 232, 0.7);
+            margin-bottom: 3rem;
+            font-weight: 300;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        /* Stats Section */
+        #stats {
+            padding: 4rem 5%;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: clamp(2.5rem, 4vw, 4rem);
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .stat-item p {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(245, 240, 232, 0.6);
+        }
+
+        .stats-source {
+            text-align: center;
+            font-size: 0.75rem;
+            color: rgba(245, 240, 232, 0.4);
+            margin-top: 4rem;
+            font-style: italic;
+        }
+
+        /* Overview Section */
+        #overview {
+            padding: var(--section-padding);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            align-items: center;
+        }
+
+        .overview-text h2 {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .overview-text p {
+            font-size: 1.1rem;
+            color: rgba(245, 240, 232, 0.8);
+            font-weight: 300;
+            line-height: 1.8;
+        }
+
+        .overview-visual {
+            position: relative;
+            aspect-ratio: 1/1;
+            background: #111;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .svg-box {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Architecture Section */
+        #architecture {
+            padding: var(--section-padding);
+            background-color: #111;
+        }
+
+        .arch-heading {
+            text-align: center;
+            margin-bottom: 6rem;
+        }
+
+        .arch-heading h2 {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+        }
+
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+        }
+
+        .arch-step {
+            border-top: 1px solid var(--accent-color);
+            padding-top: 2rem;
+        }
+
+        .arch-step .number {
+            font-family: var(--font-serif);
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            display: block;
+            line-height: 1;
+        }
+
+        .arch-step h4 {
+            font-family: var(--font-sans);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .arch-step p {
+            font-size: 0.95rem;
+            color: rgba(245, 240, 232, 0.6);
+            line-height: 1.6;
+        }
+
+        /* Tech Stack */
+        #tech-stack {
+            padding: 6rem 5%;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tech-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tech-pill {
+            padding: 0.6rem 2rem;
+            border: 1px solid rgba(245, 240, 232, 0.2);
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            color: rgba(245, 240, 232, 0.8);
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .tech-pill:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: rgba(201, 169, 110, 0.05);
+        }
+
+        /* Features Section */
+        #features {
+            padding: var(--section-padding);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .feature-card {
+            padding: 3rem;
+            border: 1px solid var(--border-color);
+            background: #111;
+            position: relative;
+            transition: transform 0.4s ease;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-card:hover::after {
+            width: 100%;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-family: var(--font-serif);
+            color: var(--accent-color);
+        }
+
+        .feature-card p {
+            font-size: 1rem;
+            color: rgba(245, 240, 232, 0.7);
+            line-height: 1.7;
+        }
+
+        /* Demo Section */
+        #demo {
+            padding: var(--section-padding);
+            background-color: #111;
+            text-align: center;
+        }
+
+        .demo-heading {
+            margin-bottom: 4rem;
+        }
+
+        .demo-heading h2 {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            margin-bottom: 1rem;
+        }
+
+        .demo-container {
+            max-width: 1000px;
+            margin: 0 auto 3rem auto;
+            aspect-ratio: 16/9;
+            background: #050505;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #demo-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .demo-overlay {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            color: #555;
+            font-family: monospace;
+            font-size: 1.2rem;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        /* Footer */
+        footer {
+            padding: 6rem 5% 3rem 5%;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 3rem;
+        }
+
+        .footer-links a {
+            color: rgba(245, 240, 232, 0.6);
+            text-decoration: none;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-color);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(245, 240, 232, 0.4);
+            border-top: 1px solid rgba(245, 240, 232, 0.1);
+            padding-top: 3rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 4rem 2rem;
+            }
+            #overview {
+                grid-template-columns: 1fr;
+                gap: 4rem;
+            }
+            .arch-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 4rem 2rem;
+            }
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hero-title {
+                font-size: 3.5rem;
+            }
+            .hero-cta {
+                flex-direction: column;
+            }
+            .arch-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .footer-top {
+                flex-direction: column;
+                gap: 3rem;
+            }
+            .footer-links {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="logo">VisionTrack</a>
+        <div class="nav-links">
+            <a href="#overview">Overview</a>
+            <a href="#architecture">Architecture</a>
+            <a href="#demo">Demo</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <section id="hero">
+        <div class="fade-in">
+            <h1 class="hero-title serif">
+                <span>Real-Time</span>
+                <span>Object</span>
+                <span>Detection</span>
+            </h1>
+            <p class="hero-sub">
+                A high-performance computer vision system built for surveillance, automation, and intelligence.
+            </p>
+            <div class="hero-cta">
+                <a href="#architecture" class="btn btn-solid">Explore Architecture</a>
+                <a href="https://github.com/aakashtiru26/coco-object-detection" target="_blank" class="btn">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="stats">
+        <div class="stats-grid fade-in">
+            <div class="stat-item">
+                <h3 class="serif">25+</h3>
+                <p>FPS Inference Speed</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="serif">YOLOv8</h3>
+                <p>Detection Model</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="serif">90%+</h3>
+                <p>mAP Score</p>
+            </div>
+            <div class="stat-item">
+                <h3 class="serif">80</h3>
+                <p>COCO Categories</p>
+            </div>
+        </div>
+        <p class="stats-source fade-in">Benchmarked on standard hardware, COCO Dataset 2017</p>
+    </section>
+
+    <section id="overview">
+        <div class="overview-text fade-in">
+            <span class="label">The System</span>
+            <h2 class="serif">Built for Speed.<br>Designed for Scale.</h2>
+            <p>
+                VisionTrack is a production-grade object detection pipeline built on YOLOv8 and PyTorch, capable of detecting and classifying multiple objects in real time from live video streams. Designed for scalable deployment in surveillance, robotics, and industrial automation.
+            </p>
+        </div>
+        <div class="overview-visual fade-in">
+            <img src="system_mockup.png" alt="Real-time object detection mockup" style="width: 100%; height: 100%; object-fit: cover; border: none;" />
+        </div>
+    </section>
+
+    <section id="architecture">
+        <div class="arch-heading fade-in">
+            <span class="label">01 — Pipeline</span>
+            <h2 class="serif">How It Works</h2>
+        </div>
+        <div class="arch-grid fade-in">
+            <div class="arch-step">
+                <span class="number">01</span>
+                <h4>Video Input</h4>
+                <p>Live webcam or video stream capture via OpenCV.</p>
+            </div>
+            <div class="arch-step">
+                <span class="number">02</span>
+                <h4>Preprocessing</h4>
+                <p>Frame resizing, normalization, and batch preparation.</p>
+            </div>
+            <div class="arch-step">
+                <span class="number">03</span>
+                <h4>Inference</h4>
+                <p>YOLOv8 model via PyTorch, confidence scoring.</p>
+            </div>
+            <div class="arch-step">
+                <span class="number">04</span>
+                <h4>Output</h4>
+                <p>Bounding boxes, class labels, and FPS overlay on stream.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="tech-stack">
+        <div class="fade-in">
+            <span class="label">Technologies</span>
+            <div class="tech-grid">
+                <span class="tech-pill">Python</span>
+                <span class="tech-pill">PyTorch</span>
+                <span class="tech-pill">YOLOv8</span>
+                <span class="tech-pill">OpenCV</span>
+                <span class="tech-pill">COCO Dataset</span>
+                <span class="tech-pill">FastAPI</span>
+                <span class="tech-pill">NumPy</span>
+                <span class="tech-pill">CUDA</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="features">
+        <div class="features-grid fade-in">
+            <div class="feature-card">
+                <h3>Real-Time Inference</h3>
+                <p>Achieves 25+ frames per second on standard CPU/GPU hardware, ensuring immediate response for critical applications.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Multi-Object Detection</h3>
+                <p>Simultaneously detects and tracks over 80 distinct object categories trained on the comprehensive COCO dataset.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Confidence Scoring</h3>
+                <p>Calculates precise probability scores for every detection, allowing strict threshold filtering to eliminate false positives.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="demo">
+        <div class="demo-heading fade-in">
+            <span class="label">Live Demo</span>
+            <h2 class="serif">See It In Action</h2>
+        </div>
+        <div class="demo-container fade-in" style="position: relative;">
+            <video id="webcam-preview" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+            <canvas id="overlay-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none;"></canvas>
+            <div id="demo-placeholder" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #555; font-family: monospace;">Camera Feed Offline</div>
+            <div class="demo-overlay" id="status-display" style="position: absolute; top: 1.5rem; left: 1.5rem;">Ready</div>
+            <div class="demo-overlay" id="fps-display" style="position: absolute; top: 1.5rem; right: 1.5rem; font-size: 1.2rem; color: var(--accent-color); font-family: var(--font-serif); display: none;">0.0 FPS</div>
+        </div>
+        <div style="display:flex; justify-content:center; gap: 1rem;">
+            <button id="live-btn" class="btn btn-solid fade-in">Start Live Detection</button>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-top fade-in">
+            <a href="#" class="logo">VisionTrack</a>
+            <div class="footer-links">
+                <a href="#overview">Overview</a>
+                <a href="#architecture">Architecture</a>
+                <a href="https://github.com/aakashtiru26/coco-object-detection" target="_blank">GitHub</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+        <div class="footer-bottom fade-in">
+            © 2026 VisionTrack. Built with PyTorch & YOLOv8.
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(element => {
+            observer.observe(element);
+        });
+
+        // Live Real-Time Detection Logic
+        const webcamPreview = document.getElementById('webcam-preview');
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        const overlayCtx = overlayCanvas.getContext('2d');
+        const demoPlaceholder = document.getElementById('demo-placeholder');
+        const liveBtn = document.getElementById('live-btn');
+        const statusDisplay = document.getElementById('status-display');
+        const fpsDisplay = document.getElementById('fps-display');
+        
+        let stream;
+        let ws;
+        let isLive = false;
+        let captureInterval;
+        let isWaitingForResponse = false;
+
+        const hiddenCanvas = document.createElement('canvas');
+        const hiddenCtx = hiddenCanvas.getContext('2d');
+
+        async function initWebcam() {
+            try {
+                // Request slightly lower resolution for better real-time performance
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+                webcamPreview.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing webcam:", err);
+                statusDisplay.textContent = "Camera Error: Please allow permissions";
+                statusDisplay.style.color = "#f00";
+            }
+        }
+
+        initWebcam();
+
+        liveBtn.addEventListener('click', () => {
+            if (!isLive) {
+                startLive();
+            } else {
+                stopLive();
+            }
+        });
+
+        function startLive() {
+            if (!stream) {
+                alert("Camera not ready or permission denied.");
+                return;
+            }
+            
+            // Connect to FastAPI WebSocket
+            ws = new WebSocket('ws://localhost:8000/api/stream');
+            
+            ws.onopen = () => {
+                isLive = true;
+                liveBtn.textContent = 'Stop Live Detection';
+                liveBtn.classList.remove('btn-solid');
+                statusDisplay.textContent = 'Live Streaming...';
+                statusDisplay.style.color = '#f00';
+                
+                demoPlaceholder.style.display = 'none';
+                webcamPreview.style.display = 'block';
+                overlayCanvas.style.display = 'block';
+                fpsDisplay.style.display = 'block';
+                
+                // Match sizes to exact video resolution to scale boxes correctly
+                const videoWidth = webcamPreview.videoWidth || 640;
+                const videoHeight = webcamPreview.videoHeight || 480;
+                
+                hiddenCanvas.width = videoWidth;
+                hiddenCanvas.height = videoHeight;
+                overlayCanvas.width = videoWidth;
+                overlayCanvas.height = videoHeight;
+                
+                // Capture and send frames to backend for inference with backpressure
+                captureInterval = setInterval(() => {
+                    if (ws.readyState === WebSocket.OPEN && !isWaitingForResponse) {
+                        isWaitingForResponse = true;
+                        hiddenCtx.drawImage(webcamPreview, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+                        const frameData = hiddenCanvas.toDataURL('image/jpeg', 0.5); // Lower quality for speed
+                        ws.send(frameData);
+                    }
+                }, 1000 / 30); // Target 30 FPS requests
+            };
+            
+            ws.onmessage = (event) => {
+                isWaitingForResponse = false;
+                const data = JSON.parse(event.data);
+                fpsDisplay.textContent = data.fps + ' FPS';
+                
+                // Clear previous boxes
+                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                
+                // Draw premium custom boxes
+                data.boxes.forEach(box => {
+                    const { x, y, w, h, conf } = box;
+                    const cls = box.class;
+                    const label = `${cls.toUpperCase()} ${Math.round(conf * 100)}%`;
+                    
+                    // Main Box
+                    overlayCtx.strokeStyle = '#c9a96e'; // Gold accent
+                    overlayCtx.lineWidth = 2;
+                    overlayCtx.strokeRect(x, y, w, h);
+                    
+                    // Corner accents for premium look
+                    const cornerSize = 10;
+                    overlayCtx.lineWidth = 3;
+                    overlayCtx.beginPath();
+                    // Top Left
+                    overlayCtx.moveTo(x, y + cornerSize);
+                    overlayCtx.lineTo(x, y);
+                    overlayCtx.lineTo(x + cornerSize, y);
+                    // Top Right
+                    overlayCtx.moveTo(x + w - cornerSize, y);
+                    overlayCtx.lineTo(x + w, y);
+                    overlayCtx.lineTo(x + w, y + cornerSize);
+                    // Bottom Left
+                    overlayCtx.moveTo(x, y + h - cornerSize);
+                    overlayCtx.lineTo(x, y + h);
+                    overlayCtx.lineTo(x + cornerSize, y + h);
+                    // Bottom Right
+                    overlayCtx.moveTo(x + w - cornerSize, y + h);
+                    overlayCtx.lineTo(x + w, y + h);
+                    overlayCtx.lineTo(x + w, y + h - cornerSize);
+                    overlayCtx.stroke();
+                    
+                    // Label styling
+                    overlayCtx.font = '500 14px "Playfair Display", serif';
+                    const textWidth = overlayCtx.measureText(label).width;
+                    
+                    // Label Background
+                    overlayCtx.fillStyle = 'rgba(14, 14, 14, 0.85)'; // Dark background
+                    overlayCtx.fillRect(x, Math.max(0, y - 28), textWidth + 16, 28);
+                    
+                    // Label Border
+                    overlayCtx.strokeStyle = '#c9a96e';
+                    overlayCtx.lineWidth = 1;
+                    overlayCtx.strokeRect(x, Math.max(0, y - 28), textWidth + 16, 28);
+                    
+                    // Label Text
+                    overlayCtx.fillStyle = '#f5f0e8';
+                    overlayCtx.fillText(label, x + 8, Math.max(0, y - 28) + 19);
+                });
+            };
+            
+            ws.onerror = (err) => {
+                isWaitingForResponse = false;
+                console.error("WebSocket Error:", err);
+                stopLive();
+                statusDisplay.textContent = 'Connection Error. Is backend running?';
+                statusDisplay.style.color = '#f00';
+            };
+            
+            ws.onclose = () => {
+                stopLive();
+            };
+        }
+
+        function stopLive() {
+            if (!isLive) return;
+            isLive = false;
+            clearInterval(captureInterval);
+            if (ws) ws.close();
+            
+            liveBtn.textContent = 'Start Live Detection';
+            liveBtn.classList.add('btn-solid');
+            statusDisplay.textContent = 'Ready';
+            statusDisplay.style.color = '#555';
+            
+            webcamPreview.style.display = 'none';
+            overlayCanvas.style.display = 'none';
+            fpsDisplay.style.display = 'none';
+            demoPlaceholder.style.display = 'flex';
+        }
+
+    </script>
+</body>
+</html>
